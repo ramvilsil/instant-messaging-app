@@ -1,0 +1,42 @@
+﻿@model UsersViewModel
+@{
+    ViewBag.Title = "Users";
+}
+
+<div>
+
+    <h1>
+        All Users
+    </h1>
+
+    @foreach (var user in Model.Users)
+    {
+        @if (user.IsOnline)
+        {
+            <div
+                style="background-color: blue; color: white; width: 80%; border: solid 1px black; display: flex; justify-content: space-between;">
+
+                <div>
+                    @user.UserName
+                </div>
+
+                <a asp-controller="Messaging" asp-action="Messages" asp-route-userId="@user.Id"
+                    style="padding: 1rem; border-radius: 1rem; background-color: black; color: white; font-weight: bold;">
+                    Message
+                </a>
+
+            </div>
+        }
+        else
+        {
+            <div
+                style="background-color: red; color: white; width: 80%; border: solid 1px black; display: flex; justify-content: space-between;">
+
+                <div>
+                    @user.UserName
+                </div>
+            </div>
+        }
+
+    }
+</div>

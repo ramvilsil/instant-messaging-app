@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>@ViewData["Title"] | Application</title>
+
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+
+    <link rel="stylesheet" href="~/css/main.css" />
+
+</head>
+
+<body>
+
+    <nav
+        style="width: 100%; border: solid 1px black; display: flex; gap: 4rem; padding: 1rem; background-color: white;">
+
+        <a asp-controller="Home" asp-action="Index">
+            Home
+        </a>
+
+        @if (User.Identity.IsAuthenticated)
+        {
+            <div>
+                Logged in as @User.Identity.Name
+            </div>
+
+            <form asp-controller="Account" asp-action="LogOut" method="post">
+                <input type="submit" value="Log Out" />
+            </form>
+        }
+        else
+        {
+            <a asp-controller="Account" asp-action="Login">
+                Login
+            </a>
+        }
+
+        <a asp-controller="Account" asp-action="Users">
+            Users
+        </a>
+
+    </nav>
+
+    <main role="main">
+        @RenderBody()
+    </main>
+
+    <footer class="border-top footer text-muted">
+
+        <a asp-controller="Home" asp-action="Privacy">
+            Privacy Policy
+        </a>
+
+    </footer>
+
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+
+</html>
