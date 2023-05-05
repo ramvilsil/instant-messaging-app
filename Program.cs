@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Application.Data;
 using Application.Services;
 using Application.Models;
+using System.Net;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,7 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/Main/Error");
     app.UseHsts();
 }
 
@@ -35,12 +36,12 @@ app.UseWebSockets();
 
 app.UseRouting();
 
-app.UseAuthorization();
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
+    pattern: "{controller=Main}/{action=Index}/{id?}");
 
 await ApplicationDbInitializer.SeedUsers(app);
 

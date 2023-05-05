@@ -3,21 +3,46 @@
     ViewBag.Title = "Login";
 }
 
-<div>
+<style>
+    .text-input-bar {
+        width: 100%;
+        border: 1px solid black;
+        border-radius: 1rem;
+        padding: 1rem;
+    }
 
-    <form asp-action="Login" method="post">
-        @Html.AntiForgeryToken()
+    .submit-button {
+        width: 100%;
+        border: 1px solid black;
+        border-radius: 1rem;
+        padding: 1rem;
+        background-color: black;
+        color: white;
+        font-weight: bold;
+    }
+</style>
 
+<h1>Login</h1>
+
+<form asp-action="Login" method="post">
+    @Html.AntiForgeryToken()
+
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
         <label asp-for="Username"></label>
-        <input asp-for="Username" type="text" required />
+        <input asp-for="Username" type="text" placeholder="Enter your username/email address" required
+            class="text-input-bar" />
+    </div>
 
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
         <label asp-for="Password"></label>
-        <input asp-for="Password" type="password" required />
+        <input asp-for="Password" type="password" placeholder="Enter your password" required class="text-input-bar" />
+    </div>
 
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
         <label asp-for="ConfirmPassword"></label>
-        <input asp-for="ConfirmPassword" type="password" required />
+        <input asp-for="ConfirmPassword" type="password" placeholder="Enter your password" required
+            class="text-input-bar" />
+    </div>
 
-        <input type="submit" value="Log In" />
-    </form>
-
-</div>
+    <input type="submit" value="Log In" class="submit-button" />
+</form>

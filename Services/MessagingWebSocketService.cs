@@ -11,61 +11,78 @@ public class MessagingWebSocketService : IMessagingWebSocketService
 {
     private readonly ConcurrentDictionary<string, WebSocket> _sockets = new ConcurrentDictionary<string, WebSocket>();
 
-    public async Task SendMessageAsync(string recipientId, string message)
+    public async Task HandleWebSocketAsync(HttpContext httpContext, Func<Task> next)
     {
-        if (_sockets.TryGetValue(recipientId, out WebSocket socket) && socket.State == WebSocketState.Open)
+        if (httpContext.WebSockets.IsWebSocketRequest)
         {
-            var buffer = Encoding.UTF8.GetBytes(message);
-            await socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+            WebSocket socket = await httpContext.WebSockets.AcceptWebSocketAsync();
+
+            var currentUser = httpContext.User;
+            string currentUserId = currentUser.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            await AddWebSocketConnectionAsync(currentUserId, socket);
+
+            await HandleWebSocketMessagesAsync(currentUserId, socket);
+
+            Console.WriteLine("Started listening for messages.");
         }
-    }
-    public async Task HandleWebSocketAsync(HttpContext context, Func<Task> next)
-    {
-        if (context.WebSockets.IsWebSocketRequest)
-        {
-            WebSocket socket = await context.WebSockets.AcceptWebSocketAsync();
-            var user = context.User;
-            string userId = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            await AddWebSocketConnectionAsync(userId, socket);
-            await HandleWebSocketMessagesAsync(userId, socket);
-        }
-        else
-        {
-            await next();
-        }
+
+        else await next();
     }
 
-    public async Task AddWebSocketConnectionAsync(string userId, WebSocket socket)
+    public async Task AddWebSocketConnectionAsync(string currentUserId, WebSocket socket)
     {
-        _sockets.TryAdd(userId, socket);
+        _sockets.TryAdd(currentUserId, socket);
+
+        Console.WriteLine($"Adding Websocket connection - User Id: {currentUserId}\nSocket Hashcode: {socket.GetHashCode()}");
+
         await Task.CompletedTask;
     }
 
-    public async Task RemoveWebSocketConnectionAsync(string userId)
+    public async Task RemoveWebSocketConnectionAsync(string currentUserId)
     {
-        _sockets.TryRemove(userId, out _);
+        _sockets.TryRemove(currentUserId, out _);
+
+        Console.WriteLine($"Removing Websocket connection - User Id: {currentUserId}\nSocket: {_sockets.FirstOrDefault(x => x.Key == currentUserId).Value}");
+
         await Task.CompletedTask;
     }
 
-    public async Task HandleWebSocketMessagesAsync(string userId, WebSocket socket)
+    public async Task HandleWebSocketMessagesAsync(string senderUserId, WebSocket socket)
     {
-        byte[] buffer = new byte[1024 * 4];
+        var buffer = new byte[1024 * 4];
         WebSocketReceiveResult result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
 
         while (!result.CloseStatus.HasValue)
         {
-            string messageJson = Encoding.UTF8.GetString(buffer, 0, result.Count);
-            var messageObj = JsonConvert.DeserializeObject<MessagePayload>(messageJson);
+            string receivedMessage = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
-            if (!string.IsNullOrEmpty(messageObj?.RecipientId) && !string.IsNullOrEmpty(messageObj.Message))
-            {
-                await SendMessageAsync(messageObj.RecipientId, messageObj.Message);
-            }
+            var messageObject = JsonConvert.DeserializeObject<Message>(receivedMessage);
+
+            string messagePayload = messageObject.MessagePayload;
+
+            string recipientUserId = messageObject.RecipientUserId;
+
+            await SendMessageAsync(senderUserId, recipientUserId, messagePayload);
 
             result = await socket.ReceiveAsync(new ArraySegment<byte>(buffer), CancellationToken.None);
         }
 
-        await RemoveWebSocketConnectionAsync(userId);
         await socket.CloseAsync(result.CloseStatus.Value, result.CloseStatusDescription, CancellationToken.None);
+    }
+
+    public async Task SendMessageAsync(string senderUserId, string recipientUserId, string messagePayload)
+    {
+        if (_sockets.TryGetValue(recipientUserId, out WebSocket socket) && socket.State == WebSocketState.Open)
+        {
+            string messagePayloadJson = JsonConvert.SerializeObject(messagePayload);
+
+            var buffer = Encoding.UTF8.GetBytes(messagePayloadJson);
+
+            // Sends to the socket of recipient user
+            await socket.SendAsync(new ArraySegment<byte>(buffer), WebSocketMessageType.Text, true, CancellationToken.None);
+
+            Console.WriteLine($"Sent '{messagePayload}' message from {senderUserId} to {recipientUserId}.");
+        }
     }
 }

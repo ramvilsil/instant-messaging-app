@@ -1,0 +1,15 @@
+﻿<h1>
+    Welcome to my messaging app!
+</h1>
+
+<p>
+    This is a simple messaging app that allows you to send messages to other users.
+</p>
+
+
+@if (!User.Identity.IsAuthenticated)
+{
+    <h1>
+        Please log in to continue.
+    </h1>
+}

@@ -1,16 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
-using Application.Models;
+using Application.ViewModels;
 
 namespace Application.Controllers;
 
-public class HomeController : Controller
+public class MainController : Controller
 {
-    private readonly ILogger<HomeController> _logger;
+    private readonly ILogger<MainController> _logger;
 
-    public HomeController
+    public MainController
     (
-        ILogger<HomeController> logger
+        ILogger<MainController> logger
     )
     {
         _logger = logger;
@@ -25,6 +25,11 @@ public class HomeController : Controller
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+        var response = new ErrorViewModel
+        {
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+        };
+
+        return View(response);
     }
 }

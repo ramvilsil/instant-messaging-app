@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Application.ViewModels;
 using Application.Models;
 using Application.Data;
 
 namespace Application.Controllers;
+
 public class AccountController : Controller
 {
     private readonly UserManager<User> _userManager;
@@ -23,19 +23,6 @@ public class AccountController : Controller
         _userManager = userManager;
         _signInManager = signInManager;
         _context = context;
-    }
-
-    [HttpGet]
-    public async Task<IActionResult> Users()
-    {
-        var users = await _context.Users.ToListAsync();
-
-        var response = new UsersViewModel
-        {
-            Users = users
-        };
-
-        return View(response);
     }
 
     [HttpGet]
@@ -63,7 +50,7 @@ public class AccountController : Controller
 
                         await _context.SaveChangesAsync();
 
-                        return RedirectToAction("Users");
+                        return RedirectToAction("Users", "Messaging");
                     }
                 }
             }
@@ -90,9 +77,11 @@ public class AccountController : Controller
 
             await _signInManager.SignOutAsync();
 
-            return RedirectToAction("Index", "Home");
+            return RedirectToAction("LoggedOut");
         }
 
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Index", "Main");
     }
+
+    public IActionResult LoggedOut() => View();
 }

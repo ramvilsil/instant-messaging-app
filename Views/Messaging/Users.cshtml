@@ -1,0 +1,42 @@
+@model UsersViewModel
+@{
+    ViewBag.Title = "Users";
+}
+
+<div>
+
+    <h1>
+        All Users
+    </h1>
+
+    <section style="width: 100%; display: flex; flex-direction: column;  align-items: center;">
+        @foreach (var user in Model.Users)
+        {
+            @if (user.IsOnline)
+            {
+                <div
+                    style="height: 0.5rem; background-color: lightblue; color: white; width: 90%; border: solid 1px black; padding: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        @user.UserName
+                    </div>
+                    <a asp-controller="Messaging" asp-action="Chat" asp-route-recipientUserId="@user.Id"
+                        style="padding: 1rem; border-radius: 1rem; background-color: black; color: white; font-weight: bold;">
+                        Message
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div
+                    style="height: 0.5rem; background-color: lightgray; color: white; width: 90%; border: solid 1px black; padding: 2rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        @user.UserName
+                    </div>
+                </div>
+            }
+
+            <hr style="width: 95%;" />
+        }
+    </section>
+
+</div>

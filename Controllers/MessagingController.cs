@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 using Application.Data;
 using Application.ViewModels;
@@ -6,6 +8,7 @@ using Application.Services;
 
 namespace Application.Controllers;
 
+[Authorize]
 public class MessagingController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -22,59 +25,56 @@ public class MessagingController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Connect()
+    [Authorize]
+    public async Task<IActionResult> Users()
     {
-        Console.WriteLine("Connect attempt.");
+        var users = await _context.Users.ToListAsync();
 
-        if (HttpContext.WebSockets.IsWebSocketRequest)
+        var response = new UsersViewModel
         {
-            using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            await _messagingWebSocketService.AddWebSocketConnectionAsync(userId, webSocket);
-            await _messagingWebSocketService.HandleWebSocketMessagesAsync(userId, webSocket);
+            Users = users
+        };
 
-            return Ok();
-        }
-        else
-        {
-            return BadRequest("Not a WebSocket request.");
-        }
+        return View(response);
     }
 
     [HttpGet]
-    public IActionResult Index() => View();
-
-    [HttpGet]
-    public async Task<IActionResult> Messages(string userId)
+    public async Task<IActionResult> Chat(string recipientUserId)
     {
-        var user = await _context.Users.FindAsync(userId);
+        var recipientUser = await _context.Users.FindAsync(recipientUserId);
 
-        if (user != null)
+        // Current authorized user
+        var senderUser = await _context.Users.FindAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+
+        if (recipientUser != null)
         {
-            var response = new MessagesViewModel
+            var response = new ChatViewModel
             {
-                UserId = user.Id,
-                UserName = user.UserName
+                RecipientUserId = recipientUser.Id,
+                RecipientUsername = recipientUser.UserName
             };
 
             return View(response);
         }
 
-        return RedirectToAction("Index", "Home");
+        return BadRequest();
     }
 
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> SendMessage(string recipientId, string message)
+    [HttpGet]
+    public async Task<IActionResult> WebsocketConnection()
     {
-        var user = await _context.Users.FindAsync(recipientId);
+        Console.WriteLine("Websocket connection request.");
 
-        if (user != null)
+        if (HttpContext.WebSockets.IsWebSocketRequest)
         {
-            await _messagingWebSocketService.SendMessageAsync(user.Id, message);
+            Console.WriteLine("Websocket request received.");
+
+            await _messagingWebSocketService.HandleWebSocketAsync(HttpContext, () => Task.CompletedTask);
+
+            return Ok();
         }
 
-        return RedirectToAction("Messages", new { userId = user.Id });
+        Console.WriteLine("Not a websocket request.");
+        return BadRequest();
     }
-
 }
