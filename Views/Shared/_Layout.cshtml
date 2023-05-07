@@ -14,7 +14,7 @@
         <title>Application</title>
     }
 
-    <link rel="stylesheet" href="~/css/main.css" />
+    <link rel="stylesheet" href="~/css/main-styles.css" />
 
 </head>
 
@@ -50,20 +50,29 @@
 
     </nav>
 
-    <main role="main">
+    <main role="main" class="page-content">
         @RenderBody()
     </main>
 
     <footer class="page-footer">
 
-        <a asp-controller="Main" asp-action="Privacy">
-            Privacy Policy
-        </a>
+        <hr />
+
+        <div class="page-footer-content-container ">
+            <a asp-controller="Main" asp-action="Privacy">
+                Privacy Policy
+            </a>
+
+            <div>
+                &copy; @DateTime.UtcNow.Year Ramon's Instant Messaging App
+            </div>
+
+        </div>
 
     </footer>
 
 
-    <script src="~/js/site.js"></script>
+    <script defer src="~/js/main-script.js"></script>
     @await RenderSectionAsync("Scripts", required: false)
 
 </body>

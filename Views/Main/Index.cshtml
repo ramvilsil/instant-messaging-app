@@ -1,15 +1,18 @@
-﻿<h1>
+﻿<div class="page-title">
     Welcome to my messaging app!
-</h1>
+</div>
 
-<p>
-    This is a simple messaging app that allows you to send messages to other users.
-</p>
+<div class="text-center">
+
+    <p>
+        This is a simple messaging app that allows you to send messages to other users.
+    </p>
 
 
-@if (!User.Identity.IsAuthenticated)
-{
-    <h1>
-        Please log in to continue.
-    </h1>
-}
+    @if (!User.Identity.IsAuthenticated)
+    {
+        <h1>
+            Please log in to continue.
+        </h1>
+    }
+</div>

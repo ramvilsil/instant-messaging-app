@@ -1,0 +1,55 @@
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 50%;
+    margin: auto;
+}
+
+.form button {
+    margin-top: 1rem;
+    width: 100%;
+    border: 1px solid black;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background-color: black;
+    color: white;
+    font-weight: bold;
+}
+
+.form button:hover {
+    cursor: pointer;
+    background-color: white;
+    color: black;
+}
+
+.form-input-container {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.form-input-container label {
+    font-weight: bold;
+}
+
+.form-input-container input {
+    outline: none;
+    color: gray;
+    font-weight: lighter;
+    border: 1px solid black;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    background-color: rgb(236, 236, 236);
+}
+
+.form-input-container input:focus {
+    background-color: white;
+}
+
+@media screen and (orientation: portrait) {
+    .form {
+        width: 90%;
+    }
+}

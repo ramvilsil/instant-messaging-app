@@ -3,40 +3,72 @@
     ViewBag.Title = "Users";
 }
 
-<div>
+<div class="page-title">@ViewBag.Title</div>
 
-    <h1>
-        All Users
-    </h1>
+<style>
+    .users-container {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.25rem;
+    }
 
-    <section style="width: 100%; display: flex; flex-direction: column;  align-items: center;">
-        @foreach (var user in Model.Users)
-        {
-            @if (user.IsOnline)
-            {
-                <div
-                    style="height: 0.5rem; background-color: lightblue; color: white; width: 90%; border: solid 1px black; padding: 2rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        @user.UserName
-                    </div>
-                    <a asp-controller="Messaging" asp-action="Chat" asp-route-recipientUserId="@user.Id"
-                        style="padding: 1rem; border-radius: 1rem; background-color: black; color: white; font-weight: bold;">
-                        Message
-                    </a>
-                </div>
-            }
-            else
-            {
-                <div
-                    style="height: 0.5rem; background-color: lightgray; color: white; width: 90%; border: solid 1px black; padding: 2rem; display: flex; justify-content: space-between; align-items: center;">
-                    <div>
-                        @user.UserName
-                    </div>
-                </div>
-            }
+    .user-container {
+        height: 0.5rem;
+        color: white;
+        width: 90%;
+        border: solid 1px black;
+        padding: 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-            <hr style="width: 95%;" />
-        }
-    </section>
+    .user-container a {
+        padding: 1rem;
+        border-radius: 1rem;
+        background-color: black;
+        color: white;
+        font-weight: bold;
+    }
 
+    .active-user {
+        background-color: lightblue;
+    }
+
+    .inactive-user {
+        background-color: lightgray;
+    }
+</style>
+
+<div class="users-container">
+    @foreach (var user in Model.Users)
+    {
+        <div class="user-container active-user">
+            <div>@user.UserName</div>
+
+            <a asp-controller="Messaging" asp-action="Chat" asp-route-recipientUserId="@user.Id">Message</a>
+        </div>
+
+        <hr style="width: 95%;" />
+    }
 </div>
+
+
+@section Scripts {
+    <script>
+
+        let activeUsers = [];
+
+        const webSocketUrl = `ws://${window.location.host}/Messaging/WebsocketConnection`;
+
+        let socket = new WebSocket(webSocketUrl);
+
+        // Establish the WebSocket connection
+        socket.addEventListener('open', () => {
+            console.log('Connected to the server.');
+        });
+
+    </script>
+}

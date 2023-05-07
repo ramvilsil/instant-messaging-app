@@ -1,28 +1,22 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
-using System.Security.Claims;
 using Application.ViewModels;
 using Application.Models;
-using Application.Data;
-
 namespace Application.Controllers;
 
 public class AccountController : Controller
 {
     private readonly UserManager<User> _userManager;
     private readonly SignInManager<User> _signInManager;
-    private readonly ApplicationDbContext _context;
 
     public AccountController
     (
         UserManager<User> userManager,
-        SignInManager<User> signInManager,
-        ApplicationDbContext context
+        SignInManager<User> signInManager
     )
     {
         _userManager = userManager;
         _signInManager = signInManager;
-        _context = context;
     }
 
     [HttpGet]
@@ -44,14 +38,7 @@ public class AccountController : Controller
                 {
                     var result = await _signInManager.PasswordSignInAsync(user, loginViewModel.Password, false, false);
 
-                    if (result.Succeeded)
-                    {
-                        user.IsOnline = true;
-
-                        await _context.SaveChangesAsync();
-
-                        return RedirectToAction("Users", "Messaging");
-                    }
+                    if (result.Succeeded) return RedirectToAction("Users", "Messaging");
                 }
             }
 
@@ -65,22 +52,9 @@ public class AccountController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> LogOut()
     {
-        string userId = HttpContext.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        await _signInManager.SignOutAsync();
 
-        var user = await _context.Users.FindAsync(userId);
-
-        if (user != null)
-        {
-            user.IsOnline = false;
-
-            await _context.SaveChangesAsync();
-
-            await _signInManager.SignOutAsync();
-
-            return RedirectToAction("LoggedOut");
-        }
-
-        return RedirectToAction("Index", "Main");
+        return RedirectToAction("LoggedOut");
     }
 
     public IActionResult LoggedOut() => View();
