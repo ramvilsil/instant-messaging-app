@@ -38,9 +38,30 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Main}/{action=Index}/{id?}");
+// app.MapControllerRoute(
+//     name: "default",
+//     pattern: "{controller=Main}/{action=Index}/{id?}");
+
+app.UseEndpoints(endpoints =>
+{
+    endpoints.MapControllers();
+    endpoints.MapControllerRoute(
+        name: "default",
+        pattern: "{controller=Main}/{action=Index}/{id?}");
+    endpoints.Map("/Messaging/WebSocket", async context =>
+    {
+        if (context.WebSockets.IsWebSocketRequest)
+        {
+            var messagingWebSocketService = context.RequestServices.GetRequiredService<IMessagingWebSocketService>();
+            await messagingWebSocketService.HandleWebSocketAsync(context, () => Task.CompletedTask);
+        }
+        else
+        {
+            context.Response.StatusCode = 400;
+        }
+    });
+});
+
 
 await ApplicationDbInitializer.SeedUsers(app);
 
