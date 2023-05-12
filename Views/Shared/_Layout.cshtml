@@ -14,7 +14,7 @@
         <title>Application</title>
     }
 
-    <link rel="stylesheet" href="~/css/main-styles.css" />
+    <link rel="stylesheet" href="~/css/main.css" />
 
 </head>
 
@@ -72,8 +72,14 @@
     </footer>
 
 
-    <script defer src="~/js/main-script.js"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <script defer src="~/js/main.js"></script>
+    @* @await RenderSectionAsync("Scripts", required: false) *@
+
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script defer src="~/js/user-activity-tracker.js"></script>
+    }
 
 </body>
 
