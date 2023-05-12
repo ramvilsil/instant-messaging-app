@@ -10,21 +10,21 @@ namespace Application.Controllers;
 [Authorize]
 public class MessagingController : Controller
 {
-    private readonly ApplicationDbContext _context;
+    private readonly ApplicationDbContext _dbContext;
 
     public MessagingController
     (
-        ApplicationDbContext context
+        ApplicationDbContext dbContext
     )
     {
-        _context = context;
+        _dbContext = dbContext;
     }
 
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> Users()
     {
-        var users = await _context.Users.ToListAsync();
+        var users = await _dbContext.Users.ToListAsync();
 
         var response = new UsersViewModel
         {
@@ -37,10 +37,10 @@ public class MessagingController : Controller
     [HttpGet]
     public async Task<IActionResult> Chat(string recipientUserId)
     {
-        var recipientUser = await _context.Users.FindAsync(recipientUserId);
+        var recipientUser = await _dbContext.Users.FindAsync(recipientUserId);
 
         // Current authorized user
-        var senderUser = await _context.Users.FindAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
+        var senderUser = await _dbContext.Users.FindAsync(User.FindFirstValue(ClaimTypes.NameIdentifier));
 
         if (recipientUser != null)
         {

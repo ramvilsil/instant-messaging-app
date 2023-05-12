@@ -17,7 +17,10 @@ builder.Services.AddIdentity<User, IdentityRole>(options => options.SignIn.Requi
 builder.Services.AddControllersWithViews();
 
 // Register custom services
-builder.Services.AddSingleton<IMessagingWebSocketService, MessagingWebSocketService>();
+builder.Services.AddScoped<WebSocketMessageHandler>();
+builder.Services.AddScoped<UsersService>();
+
+builder.Services.AddSingleton<IUserWebSocketsManager, UserWebSocketsManager>();
 
 var app = builder.Build();
 
@@ -38,28 +41,28 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// app.MapControllerRoute(
-//     name: "default",
-//     pattern: "{controller=Main}/{action=Index}/{id?}");
 
 app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
+
     endpoints.MapControllerRoute(
         name: "default",
         pattern: "{controller=Main}/{action=Index}/{id?}");
-    endpoints.Map("/Messaging/WebSocket", async context =>
+
+    endpoints.Map("/WebSocket", async context =>
     {
         if (context.WebSockets.IsWebSocketRequest)
         {
-            var messagingWebSocketService = context.RequestServices.GetRequiredService<IMessagingWebSocketService>();
-            await messagingWebSocketService.HandleWebSocketAsync(context, () => Task.CompletedTask);
+            var webSocketMessageHandler = context.RequestServices.GetRequiredService<WebSocketMessageHandler>();
+            await webSocketMessageHandler.HandleWebSocketAsync(context, () => Task.CompletedTask);
         }
         else
         {
             context.Response.StatusCode = 400;
         }
     });
+
 });
 
 
