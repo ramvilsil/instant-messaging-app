@@ -1,0 +1,38 @@
+@{
+    ViewBag.Title = "Active Users";
+}
+
+<style>
+    #active-users-container {
+        border-radius: 1rem;
+        padding: 1rem;
+        width: 90%;
+        margin: auto;
+        border: 1px solid black;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    #active-users-container>* {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 1rem;
+    }
+
+    #active-users-container>*:hover {
+        background-color: rgb(225, 225, 225);
+        cursor: pointer;
+    }
+</style>
+
+<div class="page-title">
+    Active Users
+</div>
+
+<div id="active-users-container">
+</div>
+
+<partial name="/Views/Shared/Partials/_Footer.cshtml" />
+
+<script defer src="~/js/websocket/active-users.js"></script>

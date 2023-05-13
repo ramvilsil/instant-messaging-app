@@ -50,10 +50,28 @@ public class WebSocketMessageHandler
                             var userActiveStatus = JsonConvert.DeserializeObject<UserActiveStatus>(messageJson);
                             Console.WriteLine($"User activity status: {userActiveStatus.UserIsActive}");
 
-                            if (!userActiveStatus.UserIsActive)
+                            switch (userActiveStatus.UserIsActive)
                             {
-                                await SendMessageToUserAsync(userId, "Closing the websocket connection.");
-                                RemoveWebSocketConnection(userId);
+                                case true:
+                                    await SendMessageToUserAsync(userId,
+                                        new
+                                        {
+                                            MessageType = "UserActiveStatus",
+                                            UserIsActive = true
+                                        }
+                                    );
+                                    break;
+
+                                case false:
+                                    await SendMessageToUserAsync(userId,
+                                        new
+                                        {
+                                            MessageType = "UserActiveStatus",
+                                            UserIsActive = false
+                                        }
+                                    );
+                                    RemoveWebSocketConnection(userId);
+                                    break;
                             }
 
                             await BroadcastActiveUsersAsync();
@@ -62,9 +80,18 @@ public class WebSocketMessageHandler
 
                         case "UserMessage":
                             var userMessage = JsonConvert.DeserializeObject<UserMessage>(messageJson);
-                            Console.WriteLine($"New chat message from {userId}: {userMessage.RecipientUserId}");
 
-                            await SendMessageToUserAsync(userMessage.RecipientUserId, userMessage.Message);
+                            Console.WriteLine($"Chat from {userId} to {userMessage.RecipientUserId} - {userMessage.Message}");
+
+                            await SendMessageToUserAsync(userMessage.RecipientUserId,
+                                new
+                                {
+                                    MessageType = "UserMessage",
+                                    SenderUserId = userMessage.SenderUserId,
+                                    RecepientUserId = userMessage.RecipientUserId,
+                                    Message = userMessage.Message
+                                }
+                            );
 
                             break;
 
@@ -175,6 +202,7 @@ public class WebSocketMessageHandler
 
     public void RemoveWebSocketConnection(string userId)
     {
+        Console.WriteLine($"Removing WebSocket connection for {userId}");
         _userWebSocketsManager.Sockets.TryRemove(userId, out _);
     }
 }

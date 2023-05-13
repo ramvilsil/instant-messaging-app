@@ -38,7 +38,7 @@ public class AccountController : Controller
                 {
                     var result = await _signInManager.PasswordSignInAsync(user, loginViewModel.Password, false, false);
 
-                    if (result.Succeeded) return RedirectToAction("Users", "Messaging");
+                    if (result.Succeeded) return RedirectToAction("Index", "Main");
                 }
             }
 

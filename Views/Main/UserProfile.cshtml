@@ -1,0 +1,42 @@
+@model UserViewModel
+
+@{
+    ViewBag.Title = "Profile";
+}
+
+<style>
+    #message-button {
+        padding: 1rem;
+        background-color: purple;
+        font-weight: bold;
+        border-radius: 1rem;
+        width: max-content;
+        color: white;
+    }
+
+    #message-button:hover {
+        background-color: #5d2fd1;
+        cursor: pointer;
+    }
+</style>
+
+<div class="page-title">
+    @Model.UserName
+
+    <a asp-controller="Main" asp-action="UserMessage" asp-route-userId="@Model.UserId" id="message-button">
+        Message
+    </a>
+</div>
+
+<div style="width: 50%; margin: auto; display: flex; flex-direction: column;">
+    <div style="font-weight: 600;">Contact Info</div>
+    <div style="display: flex; flex-direction: column;">
+        <div>
+            @Model.Email
+        </div>
+    </div>
+</div>
+
+<partial name="/Views/Shared/Partials/_Footer.cshtml" />
+
+<script defer src="~/js/websocket/user-active-status.js"></script>

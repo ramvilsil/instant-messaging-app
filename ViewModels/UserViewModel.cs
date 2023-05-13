@@ -1,8 +1,8 @@
-﻿using Application.Models;
-
-namespace Application.ViewModels;
+﻿namespace Application.ViewModels;
 
 public class UserViewModel
 {
-    public User User { get; set; }
+    public string UserId { get; set; }
+    public string UserName { get; set; }
+    public string Email { get; set; }
 }

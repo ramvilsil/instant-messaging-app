@@ -1,0 +1,284 @@
+@model UserMessageViewModel
+@{
+    ViewBag.Title = "User Message";
+}
+
+<style>
+    #chat-messages div {
+        border-radius: 1rem;
+        padding: 1rem;
+        border: 1px solid black;
+        width: max-content;
+    }
+
+    #chat-messages {
+        padding-top: 5rem;
+        padding-bottom: 5rem;
+        width: 80%;
+        margin: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    #chat-header {
+        background-color: white;
+        width: 100%;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #chat-header hr {
+        width: 90%;
+    }
+
+    .chat-input-container {
+        bottom: 0;
+        position: fixed;
+        box-sizing: border-box;
+        width: 100%;
+        box-shadow: 0px 0px 10px 1px black;
+        display: flex;
+        align-items: center;
+        background-color: white;
+        padding: 1rem;
+    }
+
+    #send-message-button {
+        fill: rgb(64, 83, 255);
+        width: 10%;
+        border-radius: 1rem;
+    }
+
+    #send-message-button svg {
+        width: 2rem;
+    }
+
+    #send-message-button:hover {
+        cursor: pointer;
+    }
+
+    #message-input {
+        width: 90%;
+        border-radius: 1rem;
+        padding: 1rem;
+        font-size: large;
+    }
+</style>
+
+<div id="chat-header">
+    <h2>Chat with @Model.RecepientUserName</h2>
+
+    <hr />
+</div>
+
+<div id="chat-messages"></div>
+
+<div class="chat-input-container">
+    <input id="message-input" type="text" required />
+
+    <button id="send-message-button">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <path
+                d="M498.1 5.6c10.1 7 15.4 19.1 13.5 31.2l-64 416c-1.5 9.7-7.4 18.2-16 23s-18.9 5.4-28 1.6L284 427.7l-68.5 74.1c-8.9 9.7-22.9 12.9-35.2 8.1S160 493.2 160 480V396.4c0-4 1.5-7.8 4.2-10.7L331.8 202.8c5.8-6.3 5.6-16-.4-22s-15.7-6.4-22-.7L106 360.8 17.7 316.6C7.1 311.3 .3 300.7 0 288.9s5.9-22.8 16.1-28.7l448-256c10.7-6.1 23.9-5.5 34 1.4z" />
+        </svg>
+    </button>
+</div>
+
+<script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+
+        let activityTimer;
+        const timerDurationMilliseconds = 60000;
+
+        let userIsActive;
+
+        const handleActivityTimer = () => {
+            clearTimeout(activityTimer);
+            activityTimer = setTimeout(() => {
+                webSocket.send(JSON.stringify(
+                    {
+                        MessageType: "UserActiveStatus",
+                        UserIsActive: false
+                    }
+                ));
+            }, timerDurationMilliseconds);
+        };
+
+        const webSocketUrl = `ws://${window.location.host}/WebSocket`;
+
+        let webSocket = new WebSocket(webSocketUrl);
+
+        webSocket.addEventListener('open', () => {
+            console.log('WebSocket connection established.');
+            webSocket.send(JSON.stringify(
+                {
+                    MessageType: "UserActiveStatus",
+                    UserIsActive: true
+                }
+            ));
+            displayConnectionMessage();
+            handleActivityTimer();
+        });
+
+        window.addEventListener('beforeunload', () => {
+            webSocket.send(JSON.stringify(
+                {
+                    MessageType: "UserActiveStatus",
+                    UserIsActive: false
+                }
+            ));
+        });
+
+        document.addEventListener('click', () => {
+            handleActivityTimer();
+        });
+
+        document.addEventListener('keydown', () => {
+            handleActivityTimer();
+        });
+
+        document.addEventListener('contextmenu', () => {
+            // event.preventDefault();
+            handleActivityTimer();
+        });
+
+        document.addEventListener('scroll', () => {
+            handleActivityTimer();
+        });
+
+        webSocket.addEventListener('message', (event) => {
+
+            console.log(`WebSocket message received: ${event.data}`);
+
+            const message = JSON.parse(event.data);
+
+            switch (message.MessageType) {
+
+                case 'UserActiveStatus':
+                    console.log(`User Active Status: ${JSON.stringify(message)}`);
+
+                    userIsActive = message.UserIsActive;
+
+                    displayConnectionMessage();
+
+                    break;
+
+                case 'UserMessage':
+                    console.log(`User Message: ${JSON.stringify(message)}`);
+
+                    if ('@Model.RecepientUserId' == message.SenderUserId) {
+                        addUserMessage('server', message.Message);
+                    }
+
+                    break;
+            }
+
+        });
+
+        const messageInput = document.getElementById('message-input');
+        const sendMessageButton = document.getElementById('send-message-button');
+        const chatMessages = document.getElementById('chat-messages');
+
+        const addUserMessage = (sender, message) => {
+
+            const userMessage = document.createElement('div');
+
+            switch (sender) {
+
+                case 'server':
+                    userMessage.style.padding = '1rem';
+                    userMessage.style.backgroundColor = 'lightgray';
+                    userMessage.style.borderRadius = '1rem';
+                    userMessage.innerText = message;
+                    chatMessages.appendChild(userMessage);
+                    break;
+
+                case 'client':
+                    userMessage.style.padding = '1rem';
+                    userMessage.style.backgroundColor = 'lightblue';
+                    userMessage.style.borderRadius = '1rem';
+                    userMessage.style.alignSelf = 'flex-end';
+                    userMessage.innerText = message;
+                    chatMessages.appendChild(userMessage);
+                    break;
+            }
+
+        };
+
+        sendMessageButton.addEventListener('click', () => {
+            const message = messageInput.value;
+
+            webSocket.send(JSON.stringify(
+                {
+                    MessageType: 'UserMessage',
+                    SenderUserId: '@Model.SenderUserId',
+                    RecipientUserId: '@Model.RecepientUserId',
+                    Message: message
+                }
+            ));
+
+            messageInput.value = '';
+            addUserMessage('client', message);
+        });
+
+        messageInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessageButton.click();
+            }
+        });
+
+        const navbar = document.getElementsByClassName('navbar')[0];
+        const mainNavbar = document.getElementsByClassName('main-navbar')[0];
+        const chatHeader = document.getElementById('chat-header');
+
+        navbar.appendChild(chatHeader);
+
+        const displayConnectionMessage = () => {
+
+            const oldConnectedMessage = document.getElementById('connected-message');
+            const oldDisconnectedMessage = document.getElementById('disconnected-message');
+
+            if (oldConnectedMessage) oldConnectedMessage.remove();
+
+            if (oldDisconnectedMessage) oldDisconnectedMessage.remove();
+
+            const connectedMessage = document.createElement('div');
+            connectedMessage.id = 'connected-message';
+            connectedMessage.style.position = 'sticky';
+            connectedMessage.style.width = '100%';
+            connectedMessage.style.padding = '1rem';
+            connectedMessage.style.backgroundColor = 'blue';
+            connectedMessage.style.color = 'white';
+            connectedMessage.style.textAlign = 'center';
+            connectedMessage.style.fontWeight = 'bold';
+            connectedMessage.style.fontSize = '1.5rem';
+            connectedMessage.innerText = 'Connected.';
+
+            const disconnectedMessage = document.createElement('div');
+            disconnectedMessage.id = 'disconnected-message';
+            disconnectedMessage.style.position = 'sticky';
+            disconnectedMessage.style.width = '100%';
+            disconnectedMessage.style.padding = '1rem';
+            disconnectedMessage.style.backgroundColor = 'red';
+            disconnectedMessage.style.color = 'white';
+            disconnectedMessage.style.textAlign = 'center';
+            disconnectedMessage.style.fontWeight = 'bold';
+            disconnectedMessage.style.fontSize = '1.5rem';
+            disconnectedMessage.innerText = 'Disconnected due to inactivity.';
+
+            switch (userIsActive) {
+                case true:
+                    navbar.insertBefore(connectedMessage, mainNavbar);
+                    break;
+
+                case false:
+                    navbar.insertBefore(disconnectedMessage, mainNavbar);
+                    break;
+            }
+        };
+
+    });
+</script>

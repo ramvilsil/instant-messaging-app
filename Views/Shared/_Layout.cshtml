@@ -20,33 +20,33 @@
 
 <body>
 
-    <nav class="main-navbar">
+    <nav class="navbar">
 
-        <a asp-controller="Main" asp-action="Index">
-            Home
-        </a>
-
-        @if (User.Identity.IsAuthenticated)
-        {
-            <a asp-controller="Messaging" asp-action="Users">
-                Users
+        <div class="main-navbar">
+            <a asp-controller="Main" asp-action="Index">
+                Home
             </a>
-
-            <div>
-                Logged in as @User.Identity.Name
-            </div>
-
-            <form asp-controller="Account" asp-action="LogOut" method="post">
-                @Html.AntiForgeryToken()
-                <input type="submit" value="Log Out" class="submit-link" />
-            </form>
-        }
-        else
-        {
-            <a asp-controller="Account" asp-action="Login">
-                Login
-            </a>
-        }
+            @switch (User.Identity.IsAuthenticated)
+            {
+                case false:
+                    <a asp-controller="Account" asp-action="Login">
+                        Login
+                    </a>
+                    break;
+                case true:
+                    <a asp-controller="Main" asp-action="ActiveUsers">
+                        Active Users
+                    </a>
+                    <div>
+                        Logged in as @User.Identity.Name
+                    </div>
+                    <form asp-controller="Account" asp-action="LogOut" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="submit" value="Log Out" class="submit-link" />
+                    </form>
+                    break;
+            }
+        </div>
 
     </nav>
 
@@ -54,33 +54,7 @@
         @RenderBody()
     </main>
 
-    <footer class="page-footer">
-
-        <hr />
-
-        <div class="page-footer-content-container ">
-            <a asp-controller="Main" asp-action="Privacy">
-                Privacy Policy
-            </a>
-
-            <div>
-                &copy; @DateTime.UtcNow.Year Ramon's Instant Messaging App
-            </div>
-
-        </div>
-
-    </footer>
-
-
-    <script defer src="~/js/main.js"></script>
-    @* @await RenderSectionAsync("Scripts", required: false) *@
-
-
-    @if (User.Identity.IsAuthenticated)
-    {
-        <script defer src="~/js/user-activity-tracker.js"></script>
-    }
-
+    <script defer src="~/js/navbar.js"></script>
 </body>
 
 </html>

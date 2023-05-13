@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using Microsoft.EntityFrameworkCore;
 using Application.Data;
 using Application.Models;
 
@@ -43,7 +44,7 @@ public class UsersService
     {
         try
         {
-            var user = await _dbContext.Users.FindAsync(userId);
+            var user = await _dbContext.Users.Where(u => u.Id == userId).FirstOrDefaultAsync();
 
             return user;
         }

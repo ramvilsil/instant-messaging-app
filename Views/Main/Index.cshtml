@@ -1,18 +1,14 @@
 ﻿<div class="page-title">
-    Welcome to my messaging app!
+    Welcome to Ramon's Instant Messaging App!
 </div>
 
-<div class="text-center">
+<p class="text-center">
+    This site is a simple messaging app that allows you to send messages to other users in real time.
+</p>
 
-    <p>
-        This is a simple messaging app that allows you to send messages to other users.
-    </p>
+<partial name="/Views/Shared/Partials/_Footer.cshtml" />
 
-
-    @if (!User.Identity.IsAuthenticated)
-    {
-        <h1>
-            Please log in to continue.
-        </h1>
-    }
-</div>
+@if (User.Identity.IsAuthenticated)
+{
+    <script defer src="~/js/websocket/user-active-status.js"></script>
+}

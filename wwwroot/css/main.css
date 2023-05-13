@@ -7,6 +7,10 @@ body {
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
+::-webkit-scrollbar {
+    width: 0;
+}
+
 a {
     text-decoration: none;
 }
@@ -21,10 +25,16 @@ a {
     cursor: pointer;
 }
 
+.navbar {
+    width: 100%;
+    top: 0;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+}
+
 .main-navbar {
     width: 100%;
-    border: solid 1px black;
-    box-shadow: 0 0 0.4rem 0.001rem black;
     display: flex;
     gap: 4rem;
     padding: 1rem;
@@ -42,6 +52,7 @@ a {
 .main-navbar a:hover {}
 
 .page-content {
+    padding-top: 10rem;
     width: 100%;
     padding-bottom: 10rem;
 }
@@ -93,12 +104,11 @@ a {
 
 
 @media screen and (orientation: portrait) {
-    .main-navbar {
+    /* .navbar {
         display: none;
-    }
+    } */
 
     .page-footer-content-container {
         flex-direction: column;
-
     }
 }
