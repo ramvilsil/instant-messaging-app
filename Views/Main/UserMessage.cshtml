@@ -3,6 +3,8 @@
     ViewBag.Title = "User Message";
 }
 
+<link rel="stylesheet" href="~/css/connection-message.css" />
+
 <style>
     #chat-messages div {
         border-radius: 1rem;
@@ -69,7 +71,6 @@
 
 <div id="chat-header">
     <h2>Chat with @Model.RecepientUserName</h2>
-
     <hr />
 </div>
 
@@ -77,7 +78,6 @@
 
 <div class="chat-input-container">
     <input id="message-input" type="text" required />
-
     <button id="send-message-button">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
             <path
@@ -89,25 +89,11 @@
 <script defer>
     document.addEventListener('DOMContentLoaded', () => {
 
-        let activityTimer;
-        const timerDurationMilliseconds = 60000;
-
         let userIsActive;
-
-        const handleActivityTimer = () => {
-            clearTimeout(activityTimer);
-            activityTimer = setTimeout(() => {
-                webSocket.send(JSON.stringify(
-                    {
-                        MessageType: "UserActiveStatus",
-                        UserIsActive: false
-                    }
-                ));
-            }, timerDurationMilliseconds);
-        };
+        let activityTimer;
+        const activityTimerDurationMs = 60000;
 
         const webSocketUrl = `ws://${window.location.host}/WebSocket`;
-
         let webSocket = new WebSocket(webSocketUrl);
 
         webSocket.addEventListener('open', () => {
@@ -118,9 +104,23 @@
                     UserIsActive: true
                 }
             ));
-            displayConnectionMessage();
             handleActivityTimer();
         });
+
+        const handleActivityTimer = () => {
+
+            clearTimeout(activityTimer);
+
+            activityTimer = setTimeout(() => {
+                webSocket.send(JSON.stringify(
+                    {
+                        MessageType: "UserActiveStatus",
+                        UserIsActive: false
+                    }
+                ));
+            }, activityTimerDurationMs);
+
+        };
 
         window.addEventListener('beforeunload', () => {
             webSocket.send(JSON.stringify(
@@ -139,8 +139,8 @@
             handleActivityTimer();
         });
 
-        document.addEventListener('contextmenu', () => {
-            // event.preventDefault();
+        document.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
             handleActivityTimer();
         });
 
@@ -150,33 +150,62 @@
 
         webSocket.addEventListener('message', (event) => {
 
-            console.log(`WebSocket message received: ${event.data}`);
-
             const message = JSON.parse(event.data);
 
-            switch (message.MessageType) {
+            console.log(`Received Message: ${JSON.stringify(message)}`);
 
+            switch (message.MessageType) {
                 case 'UserActiveStatus':
                     console.log(`User Active Status: ${JSON.stringify(message)}`);
-
                     userIsActive = message.UserIsActive;
-
                     displayConnectionMessage();
-
                     break;
 
                 case 'UserMessage':
                     console.log(`User Message: ${JSON.stringify(message)}`);
-
                     if ('@Model.RecepientUserId' == message.SenderUserId) {
                         addUserMessage('server', message.Message);
                     }
-
                     break;
             }
 
         });
 
+        const navbar = document.getElementsByClassName('navbar')[0];
+        const mainNavbar = document.getElementsByClassName('main-navbar')[0];
+        const chatHeader = document.getElementById('chat-header');
+
+        navbar.appendChild(chatHeader);
+
+        const displayConnectionMessage = () => {
+
+            const oldConnectedMessage = document.getElementById('connected-message');
+            const oldDisconnectedMessage = document.getElementById('disconnected-message');
+
+            if (oldConnectedMessage) oldConnectedMessage.remove();
+
+            if (oldDisconnectedMessage) oldDisconnectedMessage.remove();
+
+            const connectedMessage = document.createElement('div');
+            connectedMessage.id = 'connected-message';
+            connectedMessage.innerText = 'Connected.';
+
+            const disconnectedMessage = document.createElement('div');
+            disconnectedMessage.id = 'disconnected-message';
+            disconnectedMessage.innerText = 'Disconnected due to inactivity.';
+
+            switch (userIsActive) {
+                case true:
+                    navbar.insertBefore(connectedMessage, mainNavbar);
+                    break;
+
+                case false:
+                    navbar.insertBefore(disconnectedMessage, mainNavbar);
+                    break;
+            }
+        };
+
+        // Handle user messages
         const messageInput = document.getElementById('message-input');
         const sendMessageButton = document.getElementById('send-message-button');
         const chatMessages = document.getElementById('chat-messages');
@@ -186,7 +215,6 @@
             const userMessage = document.createElement('div');
 
             switch (sender) {
-
                 case 'server':
                     userMessage.style.padding = '1rem';
                     userMessage.style.backgroundColor = 'lightgray';
@@ -229,56 +257,6 @@
                 sendMessageButton.click();
             }
         });
-
-        const navbar = document.getElementsByClassName('navbar')[0];
-        const mainNavbar = document.getElementsByClassName('main-navbar')[0];
-        const chatHeader = document.getElementById('chat-header');
-
-        navbar.appendChild(chatHeader);
-
-        const displayConnectionMessage = () => {
-
-            const oldConnectedMessage = document.getElementById('connected-message');
-            const oldDisconnectedMessage = document.getElementById('disconnected-message');
-
-            if (oldConnectedMessage) oldConnectedMessage.remove();
-
-            if (oldDisconnectedMessage) oldDisconnectedMessage.remove();
-
-            const connectedMessage = document.createElement('div');
-            connectedMessage.id = 'connected-message';
-            connectedMessage.style.position = 'sticky';
-            connectedMessage.style.width = '100%';
-            connectedMessage.style.padding = '1rem';
-            connectedMessage.style.backgroundColor = 'blue';
-            connectedMessage.style.color = 'white';
-            connectedMessage.style.textAlign = 'center';
-            connectedMessage.style.fontWeight = 'bold';
-            connectedMessage.style.fontSize = '1.5rem';
-            connectedMessage.innerText = 'Connected.';
-
-            const disconnectedMessage = document.createElement('div');
-            disconnectedMessage.id = 'disconnected-message';
-            disconnectedMessage.style.position = 'sticky';
-            disconnectedMessage.style.width = '100%';
-            disconnectedMessage.style.padding = '1rem';
-            disconnectedMessage.style.backgroundColor = 'red';
-            disconnectedMessage.style.color = 'white';
-            disconnectedMessage.style.textAlign = 'center';
-            disconnectedMessage.style.fontWeight = 'bold';
-            disconnectedMessage.style.fontSize = '1.5rem';
-            disconnectedMessage.innerText = 'Disconnected due to inactivity.';
-
-            switch (userIsActive) {
-                case true:
-                    navbar.insertBefore(connectedMessage, mainNavbar);
-                    break;
-
-                case false:
-                    navbar.insertBefore(disconnectedMessage, mainNavbar);
-                    break;
-            }
-        };
 
     });
 </script>

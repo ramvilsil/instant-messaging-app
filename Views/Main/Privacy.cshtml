@@ -8,4 +8,9 @@
 
 <partial name="/Views/Shared/Partials/_Footer.cshtml" />
 
-<script defer src="~/js/websocket/user-active-status.js"></script>
+@if (User.Identity.IsAuthenticated)
+{
+    <script defer src="~/js/websocket/user-active-status.js"></script>
+    <link rel="stylesheet" href="~/css/connection-message.css" />
+}
+```
