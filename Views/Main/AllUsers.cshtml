@@ -1,9 +1,9 @@
 @{
-    ViewBag.Title = "Active Users";
+    ViewBag.Title = "All Users";
 }
 
 <style>
-    #active-users-container {
+    #all-users-container {
         border-radius: 1rem;
         padding: 1rem;
         width: 90%;
@@ -14,26 +14,26 @@
         gap: 1rem;
     }
 
-    #active-users-container>* {
+    #all-users-container>* {
         width: 100%;
         padding: 0.5rem;
         border-radius: 1rem;
     }
 
-    #active-users-container>*:hover {
+    #all-users-container>*:hover {
         background-color: rgb(225, 225, 225);
         cursor: pointer;
     }
 </style>
 
 <div class="page-title">
-    Active Users
+    All Users
 </div>
 
-<div id="active-users-container">
+<div id="all-users-container">
 </div>
 
 <partial name="/Views/Shared/Partials/_Footer.cshtml" />
 
-<script defer src="~/js/websocket/active-users.js"></script>
+<script defer src="~/js/websocket/all-users.js"></script>
 <link rel="stylesheet" href="~/css/connection-message.css" />

@@ -25,6 +25,35 @@ public class WebSocketMessageHandler
         _usersService = usersService;
     }
 
+    public async Task HandleWebSocketAsync(HttpContext httpContext, Func<Task> next)
+    {
+        if (httpContext.WebSockets.IsWebSocketRequest)
+        {
+            WebSocket webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
+
+            Console.WriteLine("WebSocket connection accepted");
+
+            var currentUser = await _usersService.GetCurrentUserAsync();
+
+            AddWebSocketConnection(currentUser.Id, webSocket);
+
+            await HandleWebSocketMessagesAsync(currentUser.Id, webSocket);
+
+        }
+        else await next();
+    }
+
+    public void AddWebSocketConnection(string userId, WebSocket webSocket)
+    {
+        _userWebSocketsManager.Sockets.TryAdd(userId, webSocket);
+    }
+
+    public void RemoveWebSocketConnection(string userId)
+    {
+        Console.WriteLine($"Removing WebSocket connection for {userId}");
+        _userWebSocketsManager.Sockets.TryRemove(userId, out _);
+    }
+
     public async Task HandleWebSocketMessagesAsync(string userId, WebSocket webSocket)
     {
         var buffer = new ArraySegment<byte>(new byte[1024 * 4]);
@@ -73,16 +102,12 @@ public class WebSocketMessageHandler
                                     RemoveWebSocketConnection(userId);
                                     break;
                             }
-
                             await BroadcastActiveUsersAsync();
-
                             break;
 
                         case "UserMessage":
                             var userMessage = JsonConvert.DeserializeObject<UserMessage>(messageJson);
-
                             Console.WriteLine($"Chat from {userId} to {userMessage.RecipientUserId} - {userMessage.Message}");
-
                             await SendMessageToUserAsync(userMessage.RecipientUserId,
                                 new
                                 {
@@ -92,7 +117,6 @@ public class WebSocketMessageHandler
                                     Message = userMessage.Message
                                 }
                             );
-
                             break;
 
                         case "User":
@@ -100,12 +124,9 @@ public class WebSocketMessageHandler
                             Console.WriteLine($"Username: {user.UserName}");
                             break;
 
-                        case "ActiveUsers":
-                            var activeUsers = JsonConvert.DeserializeObject<ActiveUsers>(messageJson);
-                            Console.WriteLine($"Active Users: {activeUsers.Users.Count}");
-
-                            await SendMessageToAllUsersAsync(activeUsers);
-
+                        case "AllUsers":
+                            var allUsers = JsonConvert.DeserializeObject<AllUsers>(messageJson);
+                            await SendMessageToAllUsersAsync(allUsers);
                             break;
 
                         default:
@@ -150,59 +171,31 @@ public class WebSocketMessageHandler
 
     public async Task BroadcastActiveUsersAsync()
     {
-        var activeUsers = new List<DTOs.WebSockets.User>();
+        var activeWebSockets = _userWebSocketsManager.Sockets
+            .Where(ws => ws.Value.State == WebSocketState.Open)
+            .ToDictionary(ws => ws.Key, ws => ws.Value);
 
-        foreach (var webSocket in _userWebSocketsManager.Sockets)
+        var allUsers = new
         {
-            if (webSocket.Value.State == WebSocketState.Open)
-            {
-                var activeUser = await _dbContext.Users.FirstOrDefaultAsync(x => x.Id == webSocket.Key);
-
-                if (activeUser != null) activeUsers.Add(
-                    new DTOs.WebSockets.User
-                    {
-                        UserId = activeUser.Id,
-                        UserName = activeUser.UserName,
-                        Email = activeUser.Email
-                    }
-                );
-            }
-        }
-
-        var message = new ActiveUsers
-        {
-            Users = activeUsers
+            MessageType = "AllUsers",
+            Users = new List<DTOs.WebSockets.User>()
         };
 
-        await SendMessageToAllUsersAsync(message);
-    }
+        var users = await _dbContext.Users.ToListAsync();
 
-    public async Task HandleWebSocketAsync(HttpContext httpContext, Func<Task> next)
-    {
-        if (httpContext.WebSockets.IsWebSocketRequest)
+        foreach (var user in users)
         {
-            WebSocket webSocket = await httpContext.WebSockets.AcceptWebSocketAsync();
-
-            Console.WriteLine("WebSocket connection accepted");
-
-            var currentUser = await _usersService.GetCurrentUserAsync();
-
-            AddWebSocketConnection(currentUser.Id, webSocket);
-
-            await HandleWebSocketMessagesAsync(currentUser.Id, webSocket);
-
+            bool userIsActive = activeWebSockets.ContainsKey(user.Id);
+            allUsers.Users.Add(
+                new DTOs.WebSockets.User
+                {
+                    UserId = user.Id,
+                    UserName = user.UserName,
+                    Email = user.Email,
+                    UserActiveStatus = userIsActive
+                }
+            );
         }
-        else await next();
-    }
-
-    public void AddWebSocketConnection(string userId, WebSocket webSocket)
-    {
-        _userWebSocketsManager.Sockets.TryAdd(userId, webSocket);
-    }
-
-    public void RemoveWebSocketConnection(string userId)
-    {
-        Console.WriteLine($"Removing WebSocket connection for {userId}");
-        _userWebSocketsManager.Sockets.TryRemove(userId, out _);
+        await SendMessageToAllUsersAsync(allUsers);
     }
 }

@@ -72,9 +72,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 displayConnectionMessage();
                 break;
 
-            case 'ActiveUsers':
-                console.log(`Active Users: ${JSON.stringify(message)}`);
-                displayActiveUsers(message.Users);
+            case 'AllUsers':
+                console.log(`All Users: ${JSON.stringify(message)}`);
+                displayAllUsers(message.Users);
                 break;
         }
 
@@ -111,16 +111,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // ---------- Handle active users ----------
-    const activeUsersContainerElement = document.getElementById('active-users-container');
+    // ---------- Handle all users ----------
+    const allUsersContainerElement = document.getElementById('all-users-container');
 
-    const displayActiveUsers = (activeUsers) => {
-        activeUsersContainerElement.innerHTML = '';
-        for (const activeUser of activeUsers) {
-            const activeUserElement = document.createElement('a');
-            activeUserElement.innerText = activeUser.UserName;
-            activeUserElement.href = `/Main/UserProfile?userId=${activeUser.UserId}`;
-            activeUsersContainerElement.appendChild(activeUserElement);
+    const displayAllUsers = (allUsers) => {
+        allUsersContainerElement.innerHTML = '';
+        for (const user of allUsers) {
+            const userElement = document.createElement('a');
+            userElement.innerText = user.UserName;
+            userElement.href = `/Main/UserProfile?userId=${user.UserId}`;
+
+            switch (user.UserActiveStatus) {
+                case true:
+                    userElement.style.color = 'blue';
+                    break;
+                case false:
+                    userElement.style.color = 'red';
+            }
+
+            allUsersContainerElement.appendChild(userElement);
+
         };
     };
 

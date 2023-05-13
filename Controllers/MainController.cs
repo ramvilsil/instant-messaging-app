@@ -29,7 +29,7 @@ public class MainController : Controller
 
     [HttpGet]
     [Authorize]
-    public IActionResult ActiveUsers() => View();
+    public IActionResult AllUsers() => View();
 
     [HttpGet]
     [Authorize]
